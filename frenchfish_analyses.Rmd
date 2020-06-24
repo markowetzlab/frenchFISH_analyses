@@ -12,12 +12,13 @@ library(ggplot2)
 library(xlsx)
 library(reshape2)
 library(cowplot)
-library(dplyr)
 library(tidyr)
 library(gplots)
 library(RColorBrewer)
 library(gridExtra)
 library(gridGraphics)
+library(plyr)
+library(dplyr)
 
 path_to_dir <- "~" # change to be path to frenchFISH_analyses directory
 setwd(paste(path_to_dir, "/frenchFISH_analyses/", sep = ""))
@@ -34,8 +35,6 @@ my_theme<-theme_bw()+theme(axis.text=element_text(size=7),axis.title=element_tex
 #function to estimate the standard error
 summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,conf.interval=.95, .drop=TRUE)
 {
-  library(plyr)
-  
   # New version of length which can handle NA's: if na.rm==T, don't count them
   length2 <- function (x, na.rm=FALSE) {
     if (na.rm) sum(!is.na(x))
@@ -102,7 +101,7 @@ getCounts<-function(dat,r,h)
   
   #VAP
   mat_dat <- data.matrix(cbind(green=as.numeric(dat$green), red=as.numeric(dat$red), aqua=as.numeric(dat$aqua)))
-  VAP_all <- getManualCountsEstimates(mat_dat, r, h)
+  VAP_all <- getManualCountsEstimates(mat_dat, r, h, "max")
   VAP_aqua <- VAP_all[VAP_all$Probe=="aqua",][-c(1, 7)]
   VAP_red <- VAP_all[VAP_all$Probe=="red",][-c(1, 7)]
   VAP_green <- VAP_all[VAP_all$Probe=="green",][-c(1, 7)]
@@ -539,7 +538,7 @@ ggplot(pdat,aes(x=Method,y=as.numeric(get("50%")),colour=Method))+
   geom_errorbar(aes(ymin=as.numeric(get("2.5%")),ymax=as.numeric(get("97.5%"))))+theme(legend.position="none")
 
 
-pdat2<-pdat %>% select(Patient,"50%",Probe,Method)%>%spread(Method,"50%")
+pdat2<-pdat %>% dplyr::select(Patient,"50%",Probe,Method)%>%spread(Method,"50%")
 colnames(pdat2)<-c("Sample","Probe","Manual","FrenchFISH")
 pdat2$Manual<-as.numeric(pdat2$Manual)
 pdat2$FrenchFISH<-as.numeric(pdat2$FrenchFISH)
