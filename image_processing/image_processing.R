@@ -39,7 +39,7 @@ for(s in samples)
     red = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=3.jpg",sep="")
     aqua = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=4.jpg",sep="")
     channelSignals = list(green,red,aqua)
-    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results2/",s,"/",sep="")
+    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results/",s,"/",sep="")
     combinedImg<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=1.jpg",sep="")
     tryCatch(
       processFISH(combinedImg,writedir,bgCorrMethod,channelSignals,channelColours,sizeNucleus,probeSizes,
@@ -75,7 +75,7 @@ for(s in samples)
     red = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=3.jpg",sep="")
     aqua = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=4.jpg",sep="")
     channelSignals = list(green,red,aqua)
-    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results2/",s,"/",sep="")
+    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results/",s,"/",sep="")
     combinedImg<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=1.jpg",sep="")
     tryCatch(
       processFISH(combinedImg,writedir,bgCorrMethod,channelSignals,channelColours,sizeNucleus,probeSizes,
@@ -88,9 +88,9 @@ for(s in samples)
 
 
 #good samples
-gsamples<-c("PS09.20676_2B_Myc_Terc",
+gsamples<-c("PS09_20676_2B_Myc_Terc",
             "PS09_287383C_Myc_Terc",
-            "PS11.10021_2B_Myc_Terc",
+            "PS11_10021_2B_Myc_Terc",
             "PS11_167511L_Myc_Terc")
 gfields_of_view<-list(rbind(c(1,6),c(2,1)),
                   rbind(c(1,7),c(2,7),c(6,2)),
@@ -109,7 +109,7 @@ for(s in gsamples)
     red = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=3.jpg",sep="")
     aqua = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=4.jpg",sep="")
     channelSignals = list(green,red,aqua)
-    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results2/",s,"/",sep="")
+    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results/",s,"/",sep="")
     combinedImg<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/tile_x=",j,"_y=",i,"_c=1.jpg",sep="")
     tryCatch(
       processFISH(combinedImg,writedir,bgCorrMethod,channelSignals,channelColours,sizeNucleus,probeSizes,
@@ -142,7 +142,7 @@ for(s in ssamples)
     red = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/image_",x,"_c=3.jpg",sep="")
     green = paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/image_",x,"_c=4.jpg",sep="")
     channelSignals = list(green,red,aqua)
-    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results2/",s,"/",sep="")
+    writedir<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/results/",s,"/",sep="")
     combinedImg<-paste(path_to_dir, "/frenchFISH_analyses/image_processing/input_data/",s,"/image_",x,"_c=1.jpg",sep="")
     tryCatch(
       processFISH(combinedImg,writedir,bgCorrMethod = list(0,100),channelSignals,channelColours,sizeNucleus,probeSizes,

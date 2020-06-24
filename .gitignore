@@ -8,3 +8,7 @@ sim_error.pdf
 sim_overlap.pdf
 
 simulated_data.rds
+
+image_processing/CIL_frenchfish.xlsx
+
+*.DS_Store

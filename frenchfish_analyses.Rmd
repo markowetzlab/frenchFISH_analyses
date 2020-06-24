@@ -396,8 +396,8 @@ Given the observed spotcounts per nucleus, we can infer lamda, the intensity of 
 #automatic - FrenchFISH
 
 #manual counts
-files<-c("rigorous_PS11.10021_2B_manual_spot_counting_2016_02_02.xls","rigorous_PS09_20676_2B_2015_01_18__Maunal_spot_counting_1.xls",
-         "third_rigorous_PS09_28738_3C_2015_01_45__Maunal_spot_counting_3.xls","rigorous_PS11_16711_2015_01_18_Maunal_spot_counting2.xls",
+files<-c("rigorous_PS11_10021_2B_manual_spot_counting_2016_02_02.xls","rigorous_PS09_20676_2B_2015_01_18__Maunal_spot_counting_1.xls",
+         "third_rigorous_PS09_28738_3C_2015_01_45__Maunal_spot_counting_3.xls","rigorous_PS11_16711_2015_01_18_Maunal_spot_counting_2.xls",
          "rigorous_BL_24216_manual_spot_counting.xls","rigorous_BL_24199_manual_spot_counting.xls",
          "rigorous_BL32007_manual_spot_counting_2016_02_07.xls","rigorous_BL32080_manual_spot_counting.xls",
          "SC_07.xls","SC_011.xls","SC_028.xls","SC_030.xls")
@@ -424,7 +424,7 @@ colnames(pdat)<-c("Patient",colnames(pdat)[-1])
 
 
 #automatic counts
-samples<-c("PS11.10021_2B_Myc_Terc","PS09.20676_2B_Myc_Terc","PS09_287383C_Myc_Terc",
+samples<-c("PS11_10021_2B_Myc_Terc","PS09_20676_2B_Myc_Terc","PS09_287383C_Myc_Terc",
            "PS11_167511L_Myc_Terc","BL_024216_Myc_Terc","BL024199_Myc_Terc",
            "BL32077_Myc_Terc","BL32080_Myc_Terc","SC_007",
            "SC_011","SC_028","SC_030" )
