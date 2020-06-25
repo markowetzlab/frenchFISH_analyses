@@ -226,7 +226,7 @@ for(prob_overlap in c(0,0.1,0.3,0.5,0.8))
           
           # frenchFISH manual count correction
           probe_mat <- data.matrix(cbind(probe=as.numeric(probe)))
-          probe_VAP <- getManualCountsEstimates(probe_mat, r, h)
+          probe_VAP <- getManualCountsEstimates(probe_mat, r, h, "avg")
           VAP_adj <- probe_VAP$mean
           
           # frenchFISH automatic count correction
@@ -488,7 +488,7 @@ for(sind in 1:12)
   
   #VAP
   mat_avp = data.matrix(cbind(yellow=as.numeric(syellow), red=as.numeric(sred), green=as.numeric(sgreen)))
-  auto_VAP_all <- getManualCountsEstimates(mat_avp, r, h)
+  auto_VAP_all <- getManualCountsEstimates(mat_avp, r, h, "avg")
   auto_VAP_yellow <- auto_VAP_all[auto_VAP_all$Probe=="yellow",][-c(1, 7)]
   auto_VAP_red <- auto_VAP_all[auto_VAP_all$Probe=="red",][-c(1, 7)]
   auto_VAP_green <- auto_VAP_all[auto_VAP_all$Probe=="green",][-c(1, 7)]
