@@ -18,11 +18,26 @@ In addition to simulating FISH spot count data for correction, this markdown fil
 
 Downloading the FISH images used in the paper
 ----
-12 ovarian cancer FFPE-tissue sections assessed in the paper can be downloaded from the Cell Image Library (http://cellimagelibrary.org/home).
+12 ovarian cancer FFPE-tissue sections assessed in the paper can be downloaded from the [Cell Image Library]( http://cellimagelibrary.org/images?k=Cancer+Research+UK+Cambridge+Institute+&simple_search=Search&per_page=10&page=1). These images comprise z-stacks of TIFF images, where each z-stack is one of the tiles of the tissue section images used for analysis.
 
 Regenerating spot count CSV files
 ----
-Once the 12 image directories have been downloaded, they should be added to a directory called `image_processing/input_data`. `image_processing` contains the necessary scripts to reproduce the uncorrected spot count CSVs used above. Before proceeding, create an empty directory `image_processing/results` for storing image processing results.
+Once the 12 image directories have been downloaded, they should be added to a directory called `image_processing/input_data`. All images from each tissue section should be included in a subdirectory named as that tissue section is named. `image_processing/input_data` should therefore include 12 subdirectories containing all TIFF images:
+
+* `image_processing/input_data/BL_024216_Myc_Terc`
+* `image_processing/input_data/BL024199_Myc_Terc`
+* `image_processing/input_data/BL32077_Myc_Terc`
+* `image_processing/input_data/BL32080_Myc_Terc`
+* `image_processing/input_data/PS09_20676_2B_Myc_Terc`
+* `image_processing/input_data/PS09_287383C_Myc_Terc`
+* `image_processing/input_data/PS11_10021_2B_Myc_Terc`
+* `image_processing/input_data/PS11_167511L_Myc_Terc`
+* `image_processing/input_data/SC_007`
+* `image_processing/input_data/SC_011`
+* `image_processing/input_data/SC_028`
+* `image_processing/input_data/SC_030`
+
+ `image_processing` contains the necessary scripts to reproduce the uncorrected spot count CSVs used above. Before proceeding, create an empty directory `image_processing/results` for storing image processing results.
 First, run `image_processing/run_focus_selector.sh`, which calls `image_processing/select_focus_project_x.ijm` on each of the 12 directories to generate JPEG max projections of the 10 layers around the most focused layer in each TIFF z-stack.
 Finally, run `image_processing/image_processing.R` to automatically count the spots in these max projection images using the `FishalyzeR` package.
 
