@@ -144,7 +144,6 @@ Need to simulate data with different issues to test performance:
 -nucleus subsampling
 -varying control probe copy-number
 -missing spot counts (varying percentages: +- 1,5,10,15)
-
 ```{r simluation}
 r=9 #radius
 h=3 #tissue section thickness
@@ -385,7 +384,7 @@ print(p)
 dev.off()
 ```
 
-Given the observed spotcounts per nucleus, we can infer lamda, the intensity of the underlying poisson distribution that generated the counts. So for the manual counts for sample PS09_287383C_Myc_Terc for tile 1 we have:
+Given the observed spotcounts per nucleus, we can infer lambda, the intensity of the underlying poisson distribution that generated the counts. So for the manual counts for sample PS09_287383C_Myc_Terc for tile 1 we have:
 ```{r}
 #plot layout
 #manual - standard
