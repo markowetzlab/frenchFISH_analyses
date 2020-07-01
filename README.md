@@ -18,7 +18,7 @@ In addition to simulating FISH spot count data for correction, this markdown fil
 
 Downloading the FISH images used in the paper
 ----
-12 ovarian cancer FFPE-tissue sections assessed in the paper can be downloaded from the [Cell Image Library]( http://cellimagelibrary.org/images?k=Cancer+Research+UK+Cambridge+Institute+&simple_search=Search&per_page=10&page=1). These images comprise z-stacks of TIFF images, where each z-stack is one of the tiles of the tissue section images used for analysis.
+12 ovarian cancer FFPE-tissue sections assessed in the paper can be downloaded from the [Cell Image Library](https://doi.org/10.7295/W9P20452). These images comprise z-stacks of TIFF images, where each z-stack is one of the tiles of the tissue section images used for analysis.
 
 Regenerating spot count CSV files
 ----
