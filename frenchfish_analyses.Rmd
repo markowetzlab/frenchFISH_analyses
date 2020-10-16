@@ -21,7 +21,7 @@ library(plyr)
 library(dplyr)
 
 path_to_dir <- "~" # change to be path to frenchFISH_analyses directory
-setwd(paste(path_to_dir, "/frenchFISH_analyses/", sep = ""))
+setwd(paste(path_to_dir, "/frenchFISH_analyses_copy/", sep = ""))
 
 theme_set(theme_gray(base_size = 3))
 my_theme<-theme_bw()+theme(axis.text=element_text(size=7),axis.title=element_text(size=7),
@@ -152,10 +152,114 @@ areas<-pi*(r^2)
 samps<-50 #number of cells to simulate
 control_probe<-2 #expected copy-number of the control/centromeric probe
 long_out<-c()
-#iteration_count<-0
-use_presimulated_data<-FALSE
+long_out_subclonal<-c()
 
 set.seed(1)
+
+# Subclonal differences in ploidy simulation
+
+for(rep in 1:20) #number of samples
+{
+  for(i in c("2,4", "2,15")) #subclonal copy numbers present in sample
+  {
+    for(copy_number_fractions in c("0.1, 0.9", "0.2, 0.8", "0.3, 0.7", "0.4, 0.6", "0.5, 0.5", "0.6, 0.4", "0.7, 0.3", "0.8, 0.2", "0.9, 0.1")) #fraction of cells of each subclonal copy number
+    {
+      priorx<-runif(samps,0,r-h/2) #choose the centre point of each nucleus in the section
+      VavgFrac<-sapply(priorx,getVsegFrac,h,r) #get the fraction of the nucleus that is subsampled
+      control<-c()
+      probe<-c()
+      
+      # Get ground truth copy number of each cell in sample
+      all_i <- as.numeric(unlist(strsplit(i, ",")))
+      all_copy_number_fractions <- as.numeric(unlist(strsplit(copy_number_fractions, ", ")))
+      cell_level_i <- c()
+      for(t in 1:length(all_i))
+      {
+        cell_level_i <- c(cell_level_i, rep(all_i[t], round(all_copy_number_fractions[t]*samps)))
+      }
+      
+      for(j in 1:length(VavgFrac))
+      {
+        control<-c(control,rpois(1,control_probe*VavgFrac[j]))
+        probe<-c(probe,rpois(1,cell_level_i[j]*VavgFrac[j]))
+      }
+      
+      areas<-pi*(r^2)
+      areas<-rep(areas, length(probe))
+      
+      observed<-mean(probe)
+      standard_diploid<-(observed/mean(control))*2
+      
+      # frenchFISH manual count correction
+      probe_mat <- data.matrix(cbind(probe=as.numeric(probe)))
+      probe_VAP <- getManualCountsEstimates(probe_mat, r, h, "avg")
+      VAP_adj <- probe_VAP$mean
+      
+      # frenchFISH automatic count correction
+      probe_acc <- data.matrix(cbind(area=as.numeric(areas), probe=as.numeric(probe)))
+      probe_est <- getAutomaticCountsEstimates(probe_acc, r, h)
+      pp_est <- probe_est$median
+      
+      noise = 0
+      prob_overlap = 0
+      weighted_avg_cn <- mean(cell_level_i)
+      #print(cell_level_i)
+      #print(weighted_avg_cn)
+      long_out_subclonal<-rbind(long_out_subclonal,
+                      c(rep,control_probe==2,i,copy_number_fractions,weighted_avg_cn,observed,"Observed"),
+                      c(rep,control_probe==2,i,copy_number_fractions,weighted_avg_cn,standard_diploid,"ControlAdjusted"),
+                      c(rep,control_probe==2,i,copy_number_fractions,weighted_avg_cn,VAP_adj,"frenchFISH_manual"),
+                      c(rep,control_probe==2,i,copy_number_fractions,weighted_avg_cn,pp_est,"frenchFISH_auto"))
+    }
+  }
+}
+
+colnames(long_out_subclonal)<-c("Replicate","DiploidControl","CNsPresentInImage","FracOfEachCN","WeightedAverageCN","EstimatedCN","Method")
+long_out_subclonal<-data.frame(long_out_subclonal,stringsAsFactors = F)
+long_out_subclonal[,1]<-as.numeric(long_out_subclonal[,1])
+long_out_subclonal[,5]<-as.numeric(long_out_subclonal[,5])
+long_out_subclonal[,6]<-as.numeric(long_out_subclonal[,6])
+
+long_out_subclonal$Method<-factor(long_out_subclonal$Method,
+                                  levels = c("Observed","ControlAdjusted","frenchFISH_manual","frenchFISH_auto"))
+
+# Make plot of subclonal test
+line_width<-0.3
+#no overlapping nuclei and no noise
+pdat1_subclonal<-long_out_subclonal[!long_out_subclonal$Method=="frenchFISH_auto",]
+pdat1_subclonal$Method<-plyr::revalue(pdat1_subclonal$Method,c(frenchFISH_manual="FrenchFISH"))
+
+observed_subclonal<-ggplot(pdat1_subclonal[pdat1_subclonal$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(WeightedAverageCN),group=as.numeric(WeightedAverageCN))) + 
+  geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
+  facet_grid(. ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,15),ylim=c(1,17))+
+  scale_x_continuous(breaks=c(1:15),labels = c(rep("",4),5,rep("",4),10,rep("",4),15))+scale_y_continuous(breaks=c(1:15),labels = c(rep("",4),5,rep("",4),10,rep("",4),15))+
+  theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), strip.text.x = element_text(size = 20), strip.text.y = element_blank(),axis.title.x=element_blank(),axis.title.y=element_text(size=24))+ylab("Estimated copy-number")+ggtitle("")
+
+ploidy_2_4_subclonal<-ggplot(pdat1_subclonal[pdat1_subclonal$CNsPresentInImage=="2,4"&!pdat1_subclonal$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(WeightedAverageCN),group=as.numeric(WeightedAverageCN),fill=FracOfEachCN)) + 
+  geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
+  facet_grid(. ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,4),ylim=c(1,5))+
+  scale_x_continuous(breaks=c(1:4))+
+  scale_y_continuous(breaks=c(1:5),labels=c(1:4,rep("",1)))+
+  theme(axis.text.x = element_text(size=20), strip.text.x = element_text(size = 20), strip.text.y = element_blank(),axis.title.x=element_blank(),axis.title.y = element_blank(),axis.text.y = element_blank(),legend.position="none", plot.title = element_text(size=24))+ggtitle("Subclones with ploidies 2 and 4")
+
+ploidy_2_15_subclonal<-ggplot(pdat1_subclonal[pdat1_subclonal$CNsPresentInImage=="2,15"&!pdat1_subclonal$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(WeightedAverageCN),group=as.numeric(WeightedAverageCN),fill=FracOfEachCN)) + 
+  geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
+  scale_x_continuous(breaks=c(1:15),labels = c(rep("",4),5,rep("",4),10,rep("",4),15))+
+  scale_y_continuous(breaks=c(1:15),labels = c(rep("",4),5,rep("",4),10,rep("",4),15))+
+  facet_grid(. ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,15),ylim=c(1,17))+
+  theme(axis.text.x = element_text(size=20), strip.text.x = element_text(size = 20), axis.text.y = element_blank(),axis.title.x=element_blank(),axis.title.y = element_blank(),plot.margin = margin(5.5, 30, 5.5, 5.5, "pt"), plot.title = element_text(size=24), legend.text=element_text(size=20), legend.title=element_text(size=20))+ggtitle("Subclones with ploidies 2 and 15")+scale_fill_discrete(name="Subclone\nfractions")
+
+# Make interval plots 
+top_row_subclonal<-plot_grid(observed_subclonal,ploidy_2_4_subclonal,ploidy_2_15_subclonal,
+                             nrow=1,labels=c("a","b","c"),label_size=50,rel_widths = c(1.1,2,2.5))+
+                              theme(panel.background = element_blank())
+ggdraw(add_sub(top_row_subclonal,"Weighted average copy-number of subclones",size=24))+theme(panel.background = element_blank())
+
+grid.text("Diploid Control",rot=-90,x=0.96,gp=gpar(fontsize=7))
+pSubclonal<-grid.grab()
+dev.off()
+
+# General simulation
 
 #if(!(use_presimulated_data)){
 for(prob_overlap in c(0,0.1,0.3,0.5,0.8))
@@ -238,18 +342,11 @@ for(prob_overlap in c(0,0.1,0.3,0.5,0.8))
                           c(rep,control_probe==2,i,standard_diploid,noise,"ControlAdjusted",prob_overlap),
                           c(rep,control_probe==2,i,VAP_adj,noise,"frenchFISH_manual",prob_overlap),
                           c(rep,control_probe==2,i,pp_est,noise,"frenchFISH_auto",prob_overlap))
-          #print("COUNT:")
-          #print(iteration_count)
-          #iteration_count <- iteration_count + 1
         }
       }
     }
   }
 }
-#}else{
-#   long_out<-readRDS("simulated_data.rds")
-#}
-#saveRDS(long_out, file = "simulated_data.rds")
 
 colnames(long_out)<-c("Replicate","DiploidControl","TrueCN","EstimatedCN","NoiseLevel","Method","ProbOverlap")
 long_out<-data.frame(long_out,stringsAsFactors = F)
@@ -265,16 +362,19 @@ line_width<-0.3
 #no overlapping nuclei
 pdat1<-long_out[long_out$ProbOverlap==0&!long_out$Method=="frenchFISH_auto",]
 pdat1$Method<-plyr::revalue(pdat1$Method,c(frenchFISH_manual="FrenchFISH"))
+
 error_p1<-ggplot(pdat1[pdat1$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   facet_grid(NoiseLevel ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,10),ylim=c(1,12))+
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
   theme(strip.text.y = element_blank(),axis.title.x=element_blank())+ylab("Estimated copy-number")+ggtitle("")
+
 error_p2<-ggplot(pdat1[pdat1$DiploidControl==TRUE&!pdat1$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   facet_grid(NoiseLevel ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,10),ylim=c(1,12))+
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
   theme(strip.text.y = element_blank(),axis.title.x=element_blank(),axis.title.y = element_blank(),axis.text.y = element_blank())+ggtitle("Diploid control")
+
 error_p3<-ggplot(pdat1[pdat1$DiploidControl==FALSE&!pdat1$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
@@ -285,18 +385,21 @@ error_p3<-ggplot(pdat1[pdat1$DiploidControl==FALSE&!pdat1$Method=="Observed",], 
 pdat2<-long_out[!long_out$ProbOverlap==0&long_out$NoiseLevel==0&!long_out$Method=="frenchFISH_manual",]
 pdat2$Method<-plyr::revalue(pdat2$Method,c(frenchFISH_auto="FrenchFISH"))
 
-overlap_p1<-ggplot(pdat2[pdat2$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
+overlap_p1<-ggplot(pdat2[pdat2$Method=="Observed",], 
+aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   facet_grid(ProbOverlap ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,10),ylim=c(1,12))+
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
   theme(strip.text.y = element_blank(),axis.title.x=element_blank(),panel.background = element_blank())+ylab("Estimated copy-number")+ggtitle("")
+
 overlap_p2<-ggplot(pdat2[pdat2$DiploidControl==TRUE&!pdat2$Method=="Observed",], aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   facet_grid(ProbOverlap ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,10),ylim=c(1,12))+
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
   theme(strip.text.y = element_blank(),axis.title.x=element_blank(),axis.title.y = element_blank(),axis.text.y = element_blank(),panel.background = element_blank())+ggtitle("Diploid control")
-overlap_p3<-ggplot(pdat2[pdat2$DiploidControl==FALSE&!pdat2$Method=="Observed",], aes(y=as.numeric(EstimatedCN),
-                                                                                      x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
+
+overlap_p3<-ggplot(pdat2[pdat2$DiploidControl==FALSE&!pdat2$Method=="Observed",], 
+aes(y=as.numeric(EstimatedCN),x=as.numeric(TrueCN),group=as.numeric(TrueCN))) + 
   geom_boxplot(lwd=line_width,outlier.size = line_width)+my_theme +
   scale_x_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+scale_y_continuous(breaks=c(1:10),labels = c(rep("",4),5,rep("",4),10))+
   facet_grid(ProbOverlap ~ Method)+geom_abline(lwd=0.3)+coord_cartesian(xlim=c(1,10),ylim=c(1,12))+
@@ -373,10 +476,12 @@ legend("topright",inset=c(0,-0.18),legend=c("Control Adjusted","FrenchFISH"),
        border=FALSE, bty="n", y.intersp = 1.8, cex=0.7)
 p4<-recordPlot()
 
+# Interval plots
 top_row<-plot_grid(overlap_p1,overlap_p2,overlap_p3,nrow=1,labels=c("a","b","c"),rel_widths = c(1.1,2,2.5))+theme(panel.background = element_blank())
 ggdraw(add_sub(top_row,"True copy-number",size=7))+theme(panel.background = element_blank())
 grid.text("Probability of overlapping nuclei",rot=-90,x=0.96,gp=gpar(fontsize=7))
 p5<-grid.grab()
+
 p<-plot_grid(p5,p4,ncol=1,labels=c("","d"),rel_heights = c(0.55,0.45))
 
 cairo_pdf("sim_overlap.pdf",height=7,width=5)
@@ -519,7 +624,7 @@ res<-cbind(res,Method=c(rep("FrenchFISH   (auto)  ",3),rep("standard   (auto)  "
 colnames(res)<-colnames(pdat)
 pdat<-rbind(pdat,res)
 
-pdat$Method = factor(pdat$Method,levels(pdat$Method)[c(2,5,4,3,1)])
+#pdat$Method = factor(pdat$Method,levels(pdat$Method)[c(2,5,4,3,1)])
 
 pdat$Patient = factor(pdat$Patient,rev(c("JBLAB-221","JBLAB-178","JBLAB-165",
                                          "JBLAB-236","JBLAB-2063","JBLAB-2047",
@@ -578,4 +683,3 @@ dev.off()
 #percentage in agreement
 sum(abs(pdat2$Manual-pdat2$FrenchFISH)<1,na.rm=T)/35
 ```
-
